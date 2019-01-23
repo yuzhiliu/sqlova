@@ -10,6 +10,7 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 # import torchvision.datasets as dsets
+from collections import OrderedDict
 
 # BERT
 import bert.tokenization as tokenization
@@ -167,7 +168,19 @@ def get_models(args, BERT_PT_PATH, trained=False, path_model_bert=None, path_mod
             res = torch.load(path_model_bert)
         else:
             res = torch.load(path_model_bert, map_location='cpu')
+
+#        state_dict = res['model_bert']
+#        
+#        new_state_dict = OrderedDict()
+#        for k, v in state_dict.items():
+#            #name = k[7:] # remove 'module.' of dataparallel
+#            name = k.replace('module.', '')
+#            new_state_dict[name]=v
+#        res = new_state_dict
+        
+
         model_bert.load_state_dict(res['model_bert'])
+        #model_bert.load_state_dict(res)
         model_bert.to(device)
 
         if torch.cuda_is_available():
@@ -175,6 +188,15 @@ def get_models(args, BERT_PT_PATH, trained=False, path_model_bert=None, path_mod
         else:
             res = torch.load(path_model, map_location='cpu')
 
+#        state_dict = res['model']
+#        
+#        new_state_dict = OrderedDict()
+#        for k, v in state_dict.items():
+#            #name = k[7:] # remove 'module.' of dataparallel
+#            name = k.replace('module.', '')
+#            new_state_dict[name]=v
+#        res = new_state_dict
+#        model.load_state_dict(res)
         model.load_state_dict(res['model'])
 
     return model, model_bert, tokenizer, bert_config
@@ -542,7 +564,7 @@ if __name__ == '__main__':
     args = construct_hyper_param(parser)
 
     ## 2. Paths
-    path_h = '/home/wonseok'
+    path_h = '/home/ubuntu'
     path_wikisql = os.path.join(path_h, 'data', 'wikisql_tok')
     BERT_PT_PATH = path_wikisql
 
@@ -559,13 +581,13 @@ if __name__ == '__main__':
     #     collate_fn=lambda x: x  # now dictionary values are not merged!
     # )
     ## 4. Build & Load models
-    model, model_bert, tokenizer, bert_config = get_models(args, BERT_PT_PATH)
+    #model, model_bert, tokenizer, bert_config = get_models(args, BERT_PT_PATH)
 
     ## 4.1.
     # To start from the pre-trained models, un-comment following lines.
-    # path_model_bert =
-    # path_model =
-    # model, model_bert, tokenizer, bert_config = get_models(args, BERT_PT_PATH, trained=True, path_model_bert=path_model_bert, path_model=path_model)
+    path_model_bert = '/home/ubuntu/sqlova/pretrained/model_bert_best.pt'
+    path_model = '/home/ubuntu/sqlova/pretrained/model_best.pt'
+    model, model_bert, tokenizer, bert_config = get_models(args, BERT_PT_PATH, trained=True, path_model_bert=path_model_bert, path_model=path_model)
 
     ## 5. Get optimizers
     opt, opt_bert = get_opt(model, model_bert, args.fine_tune)
